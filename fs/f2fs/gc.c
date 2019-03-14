@@ -216,8 +216,8 @@ void f2fs_stop_gc_thread(struct f2fs_sb_info *sbi)
 
 static LIST_HEAD(f2fs_sbi_list);
 static DEFINE_MUTEX(f2fs_sbi_mutex);
-/* Trigger rapid GC when invalid block is higher than 3% */
-#define RAPID_GC_LIMIT_INVALID_BLOCK 3
+/* Trigger rapid GC when invalid block is higher than 2% */
+#define RAPID_GC_LIMIT_INVALID_BLOCK 2
 
 void f2fs_start_all_gc_threads(void)
 {

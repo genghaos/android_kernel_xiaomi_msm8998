@@ -248,6 +248,18 @@ config COMPACTION
 	help
 	  Allows the compaction of memory for the allocation of huge pages.
 
+config PROCESS_RECLAIM
+	bool "Enable process reclaim"
+	depends on PROC_FS
+	default n
+	help
+	 It allows to reclaim pages of the process by /proc/pid/reclaim.
+
+	 (echo file > /proc/PID/reclaim) reclaims file-backed pages only.
+	 (echo anon > /proc/PID/reclaim) reclaims anonymous pages only.
+	 (echo all > /proc/PID/reclaim) reclaims all pages.
+
+	 Any other value is ignored.
 #
 # support for page migration
 #
@@ -557,7 +569,7 @@ config ZPOOL
 	  zsmalloc.
 
 config ZBUD
-	tristate "Low density storage for compressed pages"
+	tristate "Low (Up to 2x) density storage for compressed pages"
 	default n
 	help
 	  A special purpose allocator for storing compressed pages.
@@ -565,6 +577,16 @@ config ZBUD
 	  page.  While this design limits storage density, it has simple and
 	  deterministic reclaim properties that make it preferable to a higher
 	  density approach when reclaim will be used.
+
+config Z3FOLD
+	tristate "Up to 3x density storage for compressed pages"
+	depends on ZPOOL
+	default n
+	help
+	  A special purpose allocator for storing compressed pages.
+	  It is designed to store up to three compressed pages per physical
+	  page. It is a ZBUD derivative so the simplicity and determinism are
+	  still there.
 
 config ZSMALLOC
 	tristate "Memory allocator for compressed pages"
@@ -601,6 +623,22 @@ config ZSMALLOC_STAT
 	  information to userspace via debugfs.
 	  If unsure, say N.
 
+config MM_EVENT_STAT
+	bool "Track per-process MM event"
+	depends on MMU
+	help
+	  This option enables per-process mm event stat(e.g., fault, reclaim,
+	  compaction and so on ) with some interval(Default is 0.5sec).
+	  Admin can see the stat from trace file via debugfs(e.g.,
+	  /sys/kernel/debug/tracing/trace)
+
+	  It includes max/average memory allocation latency for the interval
+	  as well as event count so that admin can see what happens in VM side
+	  (how many each event happens and how much processes spent time for
+	  the MM event). If it's too large, that would be not good situation.
+
+	  System can dump the trace into bugreport when user allows the dump.
+
 config VMAP_LAZY_PURGING_FACTOR
 	int "multiplier to the size of purged vmap areas"
 	default "8" if ARM
@@ -609,7 +647,6 @@ config VMAP_LAZY_PURGING_FACTOR
 	  It is used as a multiplier to the max VA pages purged in a
 	  single attempt. For 32-bit in order to reduce fragmentation
 	  of vmalloc space, we decrease the default value to "8".
-
 
 config GENERIC_EARLY_IOREMAP
 	bool
@@ -727,19 +764,3 @@ config FORCE_ALLOC_FROM_DMA_ZONE
 	  always using ZONE_DMA memory.
 
 	  If unsure, say "n".
-
-config PROCESS_RECLAIM
-	bool "Enable process reclaim"
-	depends on PROC_FS
-	default n
-	help
-	 It allows to reclaim pages of the process by /proc/pid/reclaim.
-
-	 (echo file > /proc/PID/reclaim) reclaims file-backed pages only.
-	 (echo anon > /proc/PID/reclaim) reclaims anonymous pages only.
-	 (echo all > /proc/PID/reclaim) reclaims all pages.
-
-	 (echo addr size-byte > /proc/PID/reclaim) reclaims pages in
-	 (addr, addr + size-bytes) of the process.
-
-	 Any other vaule is ignored.
